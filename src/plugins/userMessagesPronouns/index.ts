@@ -16,20 +16,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import "./styles.css";
+import "./style.css";
 
+import { migratePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 
-import { useProfilePronouns } from "./api";
-import PronounsAboutComponent from "./components/PronounsAboutComponent";
-import { CompactPronounsChatComponentWrapper, PronounsChatComponentWrapper } from "./components/PronounsChatComponent";
+import { CompactPronounsChatComponentWrapper, PronounsChatComponentWrapper } from "./PronounsChatComponent";
 import { settings } from "./settings";
 
+migratePluginSettings("UserMessagesPronouns", "PronounDB");
 export default definePlugin({
-    name: "PronounDB",
+    name: "UserMessagesPronouns",
     authors: [Devs.Tyman, Devs.TheKodeToad, Devs.Ven, Devs.Elvyra],
-    description: "Adds pronouns to user messages using pronoundb",
+    description: "Adds pronouns to chat user messages",
+    settings,
+
     patches: [
         {
             find: "showCommunicationDisabledStyles",
@@ -45,34 +47,9 @@ export default definePlugin({
                     replace: "[$1, $self.PronounsChatComponentWrapper(arguments[0])]"
                 }
             ]
-        },
-
-        {
-            find: ".Messages.USER_PROFILE_PRONOUNS",
-            group: true,
-            replacement: [
-                {
-                    match: /\.PANEL},/,
-                    replace: "$&{pronouns:vcPronoun,source:vcPronounSource,hasPendingPronouns:vcHasPendingPronouns}=$self.useProfilePronouns(arguments[0].user?.id),"
-                },
-                {
-                    match: /text:\i\.\i.Messages.USER_PROFILE_PRONOUNS/,
-                    replace: '$&+(vcPronoun==null||vcHasPendingPronouns?"":` (${vcPronounSource})`)'
-                },
-                {
-                    match: /(\.pronounsText.+?children:)(\i)/,
-                    replace: "$1(vcPronoun==null||vcHasPendingPronouns)?$2:vcPronoun"
-                }
-            ]
         }
     ],
 
-    settings,
-
-    settingsAboutComponent: PronounsAboutComponent,
-
-    // Re-export the components on the plugin object so it is easily accessible in patches
     PronounsChatComponentWrapper,
     CompactPronounsChatComponentWrapper,
-    useProfilePronouns
 });
